@@ -1,5 +1,6 @@
 # IoT Sensor Network
 
+
 ## Description
 
 We want to create a solution for monitoring the environment of classrooms or dorms.
@@ -21,10 +22,6 @@ More deliverables to come soon.
 
 ## Features 
 List all the features of your application in the order of priority.
-1. Feature #1
-2. Feature #2
-3. Feature #3 
-...
 
 1. Python server application to collect data from clients.
 2. Particle C++ application to collect data from sensors and send data to server.
