@@ -1,18 +1,21 @@
-import numpy as np
+from itertools import count
 import matplotlib.pyplot as plt
 import random
+from matplotlib.animation import FuncAnimation
 
-def getRandom():
-    arr = []
-    for i in range(10):
-        arr.append(random.randint(i,10))
-    return arr
+x = []
+y = []
 
-def _plot(x,y):
-    plt.plot(x, y)
-    plt.show()
- 
-x = getRandom()
-y = getRandom()
+index = count()
 
-_plot(x,y)
+def _plot(i):
+	x.append(next(index))
+	y.append(random.randint(1,5))
+
+	plt.cla()
+	plt.plot(x,y)
+
+livePlot = FuncAnimation(plt.gcf(),_plot,interval = 1000)
+
+plt.tight_layout()
+plt.show()
