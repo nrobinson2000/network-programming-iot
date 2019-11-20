@@ -29,8 +29,11 @@
 #define LDRPIN A0
 
 // System configuration macros
-SYSTEM_MODE(MANUAL);
+SYSTEM_MODE(SEMI_AUTOMATIC);
 SYSTEM_THREAD(ENABLED);
+
+// Particle Hardware Identifier (first 8 chars)
+char deviceID[9];
 
 // Sensor Data Point Structure
 struct ReadingPayload
@@ -41,6 +44,7 @@ struct ReadingPayload
   uint8_t brightness; // Relative brightness 0-255
 };
 
+// Data point for storing sensor readings
 ReadingPayload currentReading;
 
 // Global Objects
@@ -85,14 +89,7 @@ inline void connectWifi()
   wifiConnected = waitFor(WiFi.ready, WIFI_TIMEOUT_SECONDS * SECONDS_MS);
 
 #ifdef LOGGING
-  if (wifiConnected)
-  {
-    Serial.println("Established Wi-Fi connection.");
-  }
-  else
-  {
-    Serial.println("Failed to connect to Wi-Fi!");
-  }
+  Serial.println(wifiConnected ? "Established Wi-Fi connection." : "Failed to connect to Wi-Fi!");
 #endif
 }
 
@@ -104,9 +101,20 @@ void publishData();
 Timer readTimer(readingPeriod *SECONDS_MS, readSensors);
 Timer publishTimer(publishPeriod *SECONDS_MS, publishData);
 
+// Set the device id string
+inline void setDeviceID()
+{
+  // Get string of device id
+  const char *id = System.deviceID();
+  snprintf(deviceID, sizeof(deviceID), "%s", id);
+}
+
 // Initialize sensors and objects
 void setup()
 {
+  // Save the identifier
+  setDeviceID();
+
   // Start serial connection to PC
   Serial.begin(115200);
 
@@ -119,6 +127,19 @@ void setup()
 
   // Connect to the server
   maintainSocket();
+
+  // Synchronize time with Particle cloud
+  Particle.connect();
+  if (waitFor(Particle.connected, WIFI_TIMEOUT_SECONDS * SECONDS_MS))
+  {
+    Particle.syncTime();
+  }
+#ifdef LOGGING
+  else
+  {
+    Serial.println("Could not synchronize with the Particle cloud!");
+  }
+#endif
 
   // Start timers
   readTimer.start();
@@ -138,6 +159,16 @@ void readSensors()
   currentReading.humidity = dht.getHumidity();
   currentReading.brightness = analogRead(LDRPIN) >> 4;
   currentReading.time = Time.now();
+
+  // Check DHT data for errors
+  if (isnan(currentReading.temperature) || isnan(currentReading.humidity))
+  {
+#ifdef LOGGING
+    Serial.println("Error reading from DHT!");
+#endif
+    // Return early, without enqueueing data point
+    return;
+  }
 
   // Remove the oldest entry if the queue is full
   if (messageQueue.size() >= QUEUE_MAX_CAPACITY)
@@ -159,8 +190,8 @@ void publishData()
     ReadingPayload front = messageQueue.front();
 
     // Format data into JSON
-    snprintf(jsonBuffer, sizeof(jsonBuffer), "{\"time\":%ld,\"tempF\":%1.2f,\"humidity\":%1.2f,\"brightness\":%u}",
-             front.time, front.temperature, front.humidity, front.brightness);
+    snprintf(jsonBuffer, sizeof(jsonBuffer), "{\"tempF\":%1.2f,\"humidity\":%1.2f,\"brightness\":%u,\"time\":%ld,\"id\":\"%s\"}",
+             front.temperature, front.humidity, front.brightness, front.time, deviceID);
 
     // Ensure WiFi and socket are still connected
     connectWifi();
