@@ -1,84 +1,85 @@
-# Usage: Open terminal/cmd and run "python WebServer.py"
-
-# Import socket module
-from socket import * 
-# Import Thread
+from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
-# In order to terminate the program
-import sys
+
+# Set up chat server
+# Store client sockets
+clients = {}
+
+HOST = ''
+PORT = 1234
+
+
+BUFSIZ = 1024
+ADDR = (HOST, PORT)
+
+# Create a TCP server socket
+SERVER = socket(AF_INET, SOCK_STREAM)
+SERVER.bind(ADDR)
 
 
 # Handles incomming connections
-def accept_incoming_connections(serverSocket):
+def accept_incoming_connections():
     while True:
-        # Set up a new connection from the client
-        connectionSocket, addr = serverSocket.accept()
-        print("%s:%s has connected." % addr)
+        # Set up a new connection from the chat client
+        client, client_address = SERVER.accept()
+        # print("%s:%s has connected." % client_address)
+        # Send greeting message
+        client.send("Welcome to the IOT server, please enter a name before transmission begins".encode("utf8"))
         # Start client thread to handle the new connection
-        Thread(target=handle_client, args=(connectionSocket,)).start()
-        
-# Handles a single client connection, taking connection socket as argument
-def handle_client(connectionSocket):
-        # If an exception occurs during the execution of try clause
-	# the rest of the clause is skipped
-	# If the exception type matches the word after except
-	# the except clause is executed
-	try:
-		# Receives the request message from the client
-		message = connectionSocket.recv(1024).decode()
+        Thread(target=handle_client, args=(client,)).start()
 
-		# Extract the path of the requested object from the message
-		# The path is the second part of HTTP header, identified by [1]
-		filename = message.split()[1]
-		#print(filename)
-		# Because the extracted path of the HTTP request includes 
-		# a character '\', we read the path from the second character 
-		f = open(filename[1:], 'rb')
-		# Store the entire content of the requested file in a temporary buffer
-		data = f.read()
-		# Send the HTTP response header line to the connection socket
-		connectionSocket.send("HTTP/1.1 200 OK\r\n\r\n".encode())
-		connectionSocket.send(data)
-		connectionSocket.send("\r\n".encode()) 
-		
-		# Close the client connection socket
-		connectionSocket.close()
 
-	except IOError:
-		# Send HTTP response message for file not found
-		connectionSocket.send("HTTP/1.1 404 Not Found\r\n\r\n".encode())
-		connectionSocket.send("<html><head></head><body><h1>404 Not Found</h1></body></html>\r\n".encode())
-		# Close the client connection socket
-		connectionSocket.close()
+# Handles a single client connection, taking client socket as argument
+def handle_client(client):
+    # Get name from chat client
+    name = client.recv(BUFSIZ).decode("utf8")
+    # Send welcome message to chat client
+    welcome = 'You may begin transmission, if you ever want to quit, type {quit} to exit.'
+    client.send(welcome.encode("utf8"))
+    # Add new pair client socket, name to the clients pool
+    clients[client] = name
+
+    while True:
+        # Receive message from client
+        msg = client.recv(BUFSIZ)
+        # If it is not a {quit} message from client, then broadcast the
+        # message to the rest of the connected chat clients
+        # Else server acks the {quit} message, deletes the client from
+        # the chat pool, and informs everyone
+        if msg != "{quit}".encode("utf8"):
+            if name != "Graph":
+                broadcast(msg)
+            else:
+                print(msg)
+        else:
+            client.send("{quit}".encode("utf8"))
+            client.close()
+            del clients[client]
+            msg = "%s has left the chat!" % name
+            print(msg)
+            broadcast(msg.encode("utf8"))
+            break
+
+
+# Broadcasts a message to all the clients, using prefix for name identification
+def broadcast(msg, prefix=""):
+    for sock in clients:
+        sock.send(prefix.encode("utf8") + msg)
+
 
 def main():
-        # Create a TCP server socket
-        #(AF_INET is used for IPv4 protocols)
-        #(SOCK_STREAM is used for TCP)
-        serverSocket = socket(AF_INET, SOCK_STREAM)
+    # Start listening to client connections
+    SERVER.listen(5)
+    print("Waiting for connection...")
+    # Start the accepting connections thread
+    ACCEPT_THREAD = Thread(target=accept_incoming_connections)
+    ACCEPT_THREAD.start()
+    # Wait for the accepting connections thread to stop
+    ACCEPT_THREAD.join()
 
-        # Assign a port number
-        serverPort = 1234
+    # Close the server socket
+    SERVER.close()
 
-        # Bind the socket to server address and server port
-        serverSocket.bind(('', serverPort))
-
-        # Listen to at most 5 connections at a time
-        serverSocket.listen(5)
-
-        # Server should be up and running and listening to the incoming connections
-        print('The server is ready to receive')
-
-        # Start the accepting connections thread
-        acceptThread = Thread(target=accept_incoming_connections, args=(serverSocket,))
-        acceptThread.start()
-        # Wait for the accepting connections thread to stop
-        acceptThread.join()
-        
-        # Close the server socket
-        serverSocket.close()  
-        # Terminate the program after sending the corresponding data
-        sys.exit()
 
 if __name__ == "__main__":
     main()
