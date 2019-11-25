@@ -1,5 +1,6 @@
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
+import json
 
 # Set up chat server
 # Store client sockets
@@ -41,30 +42,29 @@ def handle_client(client):
 
     while True:
         # Receive message from client
-        msg = client.recv(BUFSIZ)
+        msg = client.recv(BUFSIZ).decode("utf8")
+        msg_print = json.loads(msg)
+        msg_string = json.dumps(msg_print).encode("utf8")
+        print(msg_print)
         # If it is not a {quit} message from client, then broadcast the
         # message to the rest of the connected chat clients
         # Else server acks the {quit} message, deletes the client from
         # the chat pool, and informs everyone
         if msg != "{quit}".encode("utf8"):
-            if name != "Graph":
-                broadcast(msg)
-            else:
-                print(msg)
+            if clients[client] != "Graph":
+                broadcast(msg_string)
         else:
             client.send("{quit}".encode("utf8"))
             client.close()
             del clients[client]
-            msg = "%s has left the chat!" % name
-            print(msg)
-            broadcast(msg.encode("utf8"))
+            file1.close()
             break
 
 
 # Broadcasts a message to all the clients, using prefix for name identification
-def broadcast(msg, prefix=""):
+def broadcast(msg_string):
     for sock in clients:
-        sock.send(prefix.encode("utf8") + msg)
+        sock.send(msg_string)
 
 
 def main():
