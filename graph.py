@@ -64,6 +64,10 @@ def _plot(axes,x,y,name,_color):
 		axes.set_xticks(range(0,11))
 	axes.grid()
 	
+def graph():
+	livePlot = FuncAnimation(fig,makePlot,interval = 1000*1)
+	plt.show()
+
 time = [] #time
 b = [] #brightness
 t = [] #temperature
@@ -83,6 +87,4 @@ txt.get_yaxis().set_visible(False)
 for i in txt.spines:
 	txt.spines[i].set_visible(False)
 plt.subplots_adjust(top=0.9, hspace = 0.4,left=0.05,right=0.95)
-
-livePlot = FuncAnimation(fig,makePlot,interval = 1000*1)
-plt.show()
+graph()
