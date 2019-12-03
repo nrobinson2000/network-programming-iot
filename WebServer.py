@@ -16,6 +16,7 @@ ADDR = (HOST, PORT)
 # Create a TCP server socket
 SERVER = socket(AF_INET, SOCK_STREAM)
 SERVER.bind(ADDR)
+file = open("JsonHolder.txt", "w")
 
 
 # Handles incomming connections
@@ -43,21 +44,23 @@ def handle_client(client):
     while True:
         # Receive message from client
         msg = client.recv(BUFSIZ).decode("utf8")
-        msg_print = json.loads(msg)
-        msg_string = json.dumps(msg_print).encode("utf8")
-        print(msg_print)
         # If it is not a {quit} message from client, then broadcast the
         # message to the rest of the connected chat clients
         # Else server acks the {quit} message, deletes the client from
         # the chat pool, and informs everyone
-        if msg != "{quit}".encode("utf8"):
+        if msg != "{quit}":
+            msg_print = json.loads(msg)
+            msg_string = json.dumps(msg_print).encode("utf8")
+            print(msg_print)
             if clients[client] != "Graph":
                 broadcast(msg_string)
+                file.write(msg)
         else:
+            print(clients[client], "has left.")
             client.send("{quit}".encode("utf8"))
             client.close()
             del clients[client]
-            file1.close()
+            file.close
             break
 
 
@@ -76,6 +79,7 @@ def main():
     ACCEPT_THREAD.start()
     # Wait for the accepting connections thread to stop
     ACCEPT_THREAD.join()
+
 
     # Close the server socket
     SERVER.close()
