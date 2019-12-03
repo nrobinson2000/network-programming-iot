@@ -7,7 +7,7 @@
 
 // Header Files:
 #include "Particle.h"
-#include "Grove_Temperature_And_Humidity_Sensor.h"
+#include "PietteTech_DHT.h"
 #include <deque>
 
 // Hardware:
@@ -25,8 +25,10 @@
 #define LOGGING
 
 // Pin Definitions
-#define DHTPIN D2
+#define DHTPIN D4
 #define LDRPIN A0
+
+#define DHTTYPE DHT11 // DHT 11
 
 // System configuration macros
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -38,10 +40,10 @@ char deviceID[9];
 // Sensor Data Point Structure
 struct ReadingPayload
 {
-  time_t time;        // Unix time
-  float temperature;  // Farenheit (degrees)
-  float humidity;     // Relative Humidity %
-  uint8_t brightness; // Relative brightness 0-255
+  time_t time;         // Unix time
+  float temperature;   // Farenheit (degrees)
+  float humidity;      // Relative Humidity %
+  uint32_t brightness; // Relative brightness 0-4095
 };
 
 // Data point for storing sensor readings
@@ -49,7 +51,7 @@ ReadingPayload currentReading;
 
 // Global Objects
 TCPClient client;
-DHT dht(DHTPIN);
+PietteTech_DHT dht(DHTPIN, DHTTYPE);
 std::deque<ReadingPayload> messageQueue;
 char jsonBuffer[400];
 
@@ -58,7 +60,7 @@ const uint32_t readingPeriod = 5;  // Read every 5 seconds
 const uint32_t publishPeriod = 30; // Publish every 30 seconds
 
 // Socket settings
-const char *serverAddress = "192.168.1.1";
+const char *serverAddress = "10.42.0.1";
 uint16_t serverPort = 1234;
 
 // State Flags
@@ -151,22 +153,91 @@ void loop()
 {
 }
 
+// TESTING
+void dhtLoop()
+{
+  Serial.println();
+  Serial.print(": Retrieving information from sensor: ");
+  Serial.print("Read sensor: ");
+
+  int result = dht.acquireAndWait(1000); // wait up to 1 sec (default indefinitely)
+
+  switch (result)
+  {
+  case DHTLIB_OK:
+    Serial.println("OK");
+    break;
+  case DHTLIB_ERROR_CHECKSUM:
+    Serial.println("Error\n\r\tChecksum error");
+    break;
+  case DHTLIB_ERROR_ISR_TIMEOUT:
+    Serial.println("Error\n\r\tISR time out error");
+    break;
+  case DHTLIB_ERROR_RESPONSE_TIMEOUT:
+    Serial.println("Error\n\r\tResponse time out error");
+    break;
+  case DHTLIB_ERROR_DATA_TIMEOUT:
+    Serial.println("Error\n\r\tData time out error");
+    break;
+  case DHTLIB_ERROR_ACQUIRING:
+    Serial.println("Error\n\r\tAcquiring");
+    break;
+  case DHTLIB_ERROR_DELTA:
+    Serial.println("Error\n\r\tDelta time to small");
+    break;
+  case DHTLIB_ERROR_NOTSTARTED:
+    Serial.println("Error\n\r\tNot started");
+    break;
+  default:
+    Serial.println("Unknown error");
+    break;
+  }
+  Serial.print("Humidity (%): ");
+  Serial.println(dht.getHumidity(), 2);
+
+  Serial.print("Temperature (oC): ");
+  Serial.println(dht.getCelsius(), 2);
+
+  Serial.print("Temperature (oF): ");
+  Serial.println(dht.getFahrenheit(), 2);
+
+  Serial.print("Temperature (K): ");
+  Serial.println(dht.getKelvin(), 2);
+
+  Serial.print("Dew Point (oC): ");
+  Serial.println(dht.getDewPoint());
+
+  Serial.print("Dew Point Slow (oC): ");
+  Serial.println(dht.getDewPointSlow());
+}
+
+boolean dhtRead()
+{
+  int result = dht.acquireAndWait(1000); // wait up to 1 sec (default indefinitely)
+
+  if (result != DHTLIB_OK)
+  {
+    return false;
+  }
+
+  currentReading.temperature = dht.getFahrenheit();
+  currentReading.humidity = dht.getHumidity();
+
+  return true;
+}
+
 // Read sensor data and enqueue it
 void readSensors()
 {
-  // Save sensor reading to data point object
-  currentReading.temperature = dht.getTempFarenheit();
-  currentReading.humidity = dht.getHumidity();
-  currentReading.brightness = analogRead(LDRPIN) >> 4;
+  currentReading.brightness = analogRead(LDRPIN);
   currentReading.time = Time.now();
 
-  // Check DHT data for errors
-  if (isnan(currentReading.temperature) || isnan(currentReading.humidity))
+  // Get temperature data
+  if (!dhtRead())
   {
 #ifdef LOGGING
     Serial.println("Error reading from DHT!");
 #endif
-    // Return early, without enqueueing data point
     return;
   }
 
@@ -190,7 +261,7 @@ void publishData()
     ReadingPayload front = messageQueue.front();
 
     // Format data into JSON
-    snprintf(jsonBuffer, sizeof(jsonBuffer), "{\"tempF\":%1.2f,\"humidity\":%1.2f,\"brightness\":%u,\"time\":%ld,\"id\":\"%s\"}",
+    snprintf(jsonBuffer, sizeof(jsonBuffer), "{\"tempF\":%1.2f,\"humidity\":%1.2f,\"brightness\":%lu,\"time\":%ld,\"id\":\"%s\"}",
              front.temperature, front.humidity, front.brightness, front.time, deviceID);
 
     // Ensure WiFi and socket are still connected
@@ -223,8 +294,13 @@ void publishData()
 
     // Dequeue data point if the publish was successful, otherwise return from this function
     if (error == ERR_OK)
+    {
       messageQueue.pop_front();
+      client.stop();
+    }
     else
+    {
       return;
+    }
   }
 }
