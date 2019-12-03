@@ -73,6 +73,8 @@ inline void maintainSocket()
   if (!client.connected())
   {
     client.connect(serverAddress, serverPort);
+    client.println(deviceID);
+    Serial.println("Connected to server.");
   }
 }
 
@@ -272,7 +274,7 @@ void publishData()
     uint32_t failedPublishes = 0;
 
     // Attempt to send JSON to socket
-    size_t bytesWritten = client.write(jsonBuffer);
+    size_t bytesWritten = client.println(jsonBuffer);
     int error = client.getWriteError();
 
     // Retry publish if write failed
@@ -282,21 +284,30 @@ void publishData()
       Serial.printlnf("Failed to send payload! Number of bytes written: %u", bytesWritten);
       Serial.println("Retrying...");
 #endif
+
+/*
+
       // Retry up to 3 times
       while (failedPublishes++ < PUBLISH_RETRIES && error != ERR_OK)
       {
         connectWifi();
         maintainSocket();
-        bytesWritten = client.write(jsonBuffer);
+        bytesWritten = client.println(jsonBuffer);
         error = client.getWriteError();
       }
+
+*/
+
+
     }
 
     // Dequeue data point if the publish was successful, otherwise return from this function
     if (error == ERR_OK)
     {
       messageQueue.pop_front();
-      client.stop();
+
+
+      //client.stop();
     }
     else
     {
