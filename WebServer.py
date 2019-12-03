@@ -52,7 +52,7 @@ def handle_client(client):
             msg_print = json.loads(msg)
             msg_string = json.dumps(msg_print).encode("utf8")
             print(msg_print)
-            if clients[client] != "Graph":
+            if name != "Graph":
                 broadcast(msg_string)
                 file.write(msg)
         else:
