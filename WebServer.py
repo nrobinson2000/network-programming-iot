@@ -16,7 +16,7 @@ ADDR = (HOST, PORT)
 # Create a TCP server socket
 SERVER = socket(AF_INET, SOCK_STREAM)
 SERVER.bind(ADDR)
-file = open("JsonHolder.txt", "w")
+file = open("JsonHolder.txt", "a")
 
 
 # Handles incomming connections
@@ -33,28 +33,50 @@ def accept_incoming_connections():
 
 # Handles a single client connection, taking client socket as argument
 def handle_client(client):
+
+    print("Got a client!")
+
     # Get name from chat client
     name = client.recv(BUFSIZ).decode("utf8")
+
+    print(name)
+
     # Send welcome message to chat client
-    welcome = 'You may begin transmission, if you ever want to quit, type {quit} to exit.'
-    client.send(welcome.encode("utf8"))
+    #welcome = 'You may begin transmission, if you ever want to quit, type {quit} to exit.'
+    #client.send(welcome.encode("utf8"))
+        
     # Add new pair client socket, name to the clients pool
     clients[client] = name
 
     while True:
         # Receive message from client
         msg = client.recv(BUFSIZ).decode("utf8")
+
+        #print(msg)
+
         # If it is not a {quit} message from client, then broadcast the
         # message to the rest of the connected chat clients
         # Else server acks the {quit} message, deletes the client from
         # the chat pool, and informs everyone
         if msg != "{quit}":
-            msg_print = json.loads(msg)
-            msg_string = json.dumps(msg_print).encode("utf8")
-            print(msg_print)
-            if name != "Graph":
-                broadcast(msg_string)
-                file.write(msg)
+
+            # Prepare json
+            lines = msg.splitlines()
+
+            for line in lines:
+                # Skip empty lines
+                if len(line) == 0:
+                    continue
+                line_json = json.loads(line)
+                json_string = json.dumps(line_json)
+                #print("json:")
+                print(json_string)
+
+                if name != "Graph":
+                    broadcast(json_string.encode("utf8"))
+                    file.write(json_string)
+                    file.write("\n")
+                    file.flush()
         else:
             print(clients[client], "has left.")
             client.send("{quit}".encode("utf8"))
