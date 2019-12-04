@@ -56,10 +56,7 @@ def genVal():
 def convertTime(unixTime):
     return datetime.fromtimestamp(unixTime).strftime("%H:%M:%S")
 
-temp = []
-bright = []
-humid =[]
-x = []
+x, temp ,bright, humid = [],[],[],[]
 threading.Thread(target=genVal,daemon=True).start()
 # while True:
 #     a,b,c,d = getVal()

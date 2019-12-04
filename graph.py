@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.animation import FuncAnimation
 
-import test
-#import pyClient as pc
+#import test
+import pyClient as pc
 
 def animate(i):
 	global time,t,b,m
@@ -14,12 +14,13 @@ def animate(i):
 	# b = data['Brightness']
 	# m = data['Humidity']
 	
-	time,t,b,m = test.getVal()
-	#time,t,b,m = pc.getVal()
+	#time,t,b,m = test.getVal()
+	time,t,b,m = pc.getData()
 	plotIndividual()
 	plotAll()
 	plotText()
-	
+
+#make annotations	
 def plotText():
 	txt.cla()
 	txt.text(0.1,0.95,"[Temperature]", fontsize = 10)
@@ -34,19 +35,24 @@ def plotText():
 	txt.text(0.4,0.25,"Mean: "+str(np.round(np.mean(m),decimals=2)))
 	txt.text(0.4,0.1,"Standard Deviation: "+str(np.round(np.std(m),decimals=2)), fontsize = 10)
 
+#plot each plot individually
 def plotIndividual():
 	_plot(axes=temp,x=time,y=t,name = 'Temperature',_color='red')
 	_plot(axes=bright,x=time,y=b,name = 'Brightness',_color= 'orange')
-	_plot(axes=moist,x=time,y=m,name = 'Humidity',_color= 'blue')
+	_plot(axes=moist,x=time,y=m,name = 'Humidity',_color= 'green')
 
+#plot every plot together 
 def plotAll():
 	_all.cla()
 	_all.plot(time,t,label = 'Temperature', color = 'red')
-	_all.plot(time,b,label = 'Brightness', color = 'orange')
-	_all.plot(time,m,label = 'Humidity', color = 'blue')
+	b1=[]
+	for i in b:
+		b1.append(i/100)
+	_all.plot(time,b1,label = 'Brightness \n  1:100', color = 'orange')
+	_all.plot(time,m,label = 'Humidity', color = 'green')
 	_all.set_title('Everything')
-	_all.legend(loc = (1.01,0.75), prop = {'size': 6})
-	_all.set_xticks(time)
+	_all.legend(loc = (1.01,0.715), prop = {'size': 7})
+	_all.set_xticks(np.arange(len(time)))
 	_all.tick_params(axis = 'x', rotation = -30)
 	if (len(time)>7):
 		_all.set_xlim(len(time)-8,len(time)-1)
@@ -54,14 +60,17 @@ def plotAll():
 		_all.set_xlim(0,time[len(time)-1])
 	_all.grid()
 
+#plot driver
 def _plot(axes,x,y,name,_color):
 	axes.cla()
-	axes.plot(x,y,color = _color)
+	axes.plot(x,y,'o-',color = _color)
 	axes.set_title(name+': '+str(y[len(y)-1]))
 	axes.set_xlabel('Time')
 	axes.set_ylabel(name)
-	axes.set_xticks(x)
+	axes.set_xticks(np.arange(len(x)))
 	axes.tick_params(axis = 'x', rotation = -30)
+	axes.set_ylim(y[len(y)-1]-10,y[len(y)-1]+10)
+	i,j = x[len(x)-1],y[len(y)-1]
 	if (len(x)>4):
 		axes.set_xlim(len(x)-5,len(x)-1)
 	else:
@@ -71,16 +80,17 @@ def _plot(axes,x,y,name,_color):
 def graph(file):
 	global fileName
 	fileName = file
-	livePlot = FuncAnimation(fig,animate,interval = 1000*1)
+	livePlot = FuncAnimation(fig,animate,interval = 1000*10)
 	plt.show()
 	
 
-time = [] #time
-b = [] #brightness
-t = [] #temperature
-m = [] #moisture
+time = [-1] #time
+b = [-100] #brightness
+t = [-1] #temperature
+m = [-1] #moisture
 fileName = ''
 
+plt.style.use('dark_background')
 fig = plt.figure()
 fig.set_size_inches(11, 6)
 temp = fig.add_subplot(2,3,4)
