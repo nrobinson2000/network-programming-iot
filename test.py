@@ -46,9 +46,9 @@ def getVal():
 def genVal():
     global x,temp,bright,humid
     while True:
-        temp.append(random.randint(0, 100))
-        bright.append(random.randint(0, 100))
-        humid.append(random.randint(0, 100))
+        temp.append(random.randint(99, 100))
+        bright.append(random.randint(2999, 3000))
+        humid.append(random.randint(99, 100))
         ti = convertTime(time.time())
         x.append(ti)
         time.sleep(1)

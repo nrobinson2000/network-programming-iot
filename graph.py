@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.animation import FuncAnimation
 
-#import test
-import pyClient as pc
+import test
+#import pyClient as pc
 
 def animate(i):
 	global time,t,b,m
@@ -14,8 +14,8 @@ def animate(i):
 	# b = data['Brightness']
 	# m = data['Humidity']
 	
-	#time,t,b,m = test.getVal()
-	time,t,b,m = pc.getData()
+	time,t,b,m = test.getVal()
+	#time,t,b,m = pc.getData()
 	plotIndividual()
 	plotAll()
 	plotText()
@@ -69,8 +69,7 @@ def _plot(axes,x,y,name,_color):
 	axes.set_ylabel(name)
 	axes.set_xticks(np.arange(len(x)))
 	axes.tick_params(axis = 'x', rotation = -30)
-	axes.set_ylim(y[len(y)-1]-10,y[len(y)-1]+10)
-	i,j = x[len(x)-1],y[len(y)-1]
+	
 	if (len(x)>4):
 		axes.set_xlim(len(x)-5,len(x)-1)
 	else:
@@ -80,7 +79,7 @@ def _plot(axes,x,y,name,_color):
 def graph(file):
 	global fileName
 	fileName = file
-	livePlot = FuncAnimation(fig,animate,interval = 1000*10)
+	livePlot = FuncAnimation(fig,animate,interval = 1000*1)
 	plt.show()
 	
 
