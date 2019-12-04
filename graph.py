@@ -1,12 +1,10 @@
-#from itertools import count
-#import random
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.animation import FuncAnimation
 
 import test
+#import pyClient as pc
 
 def animate(i):
 	global time,t,b,m
@@ -16,14 +14,8 @@ def animate(i):
 	# b = data['Brightness']
 	# m = data['Humidity']
 	
-	# data = test.getVal()
-	# time.append(data[0])
-	# t.append(data[1])
-	# b.append(data[2])
-	# m.append(data[3])
-
 	time,t,b,m = test.getVal()
-
+	#time,t,b,m = pc.getVal()
 	plotIndividual()
 	plotAll()
 	plotText()
@@ -53,10 +45,11 @@ def plotAll():
 	_all.plot(time,b,label = 'Brightness', color = 'orange')
 	_all.plot(time,m,label = 'Humidity', color = 'blue')
 	_all.set_title('Everything')
-	_all.legend(loc = (1.01,0.78), prop = {'size': 6})
+	_all.legend(loc = (1.01,0.75), prop = {'size': 6})
 	_all.set_xticks(time)
-	if (len(time)>15):
-		_all.set_xlim(len(time)-16,len(time)-1)
+	_all.tick_params(axis = 'x', rotation = -30)
+	if (len(time)>7):
+		_all.set_xlim(len(time)-8,len(time)-1)
 	else:
 		_all.set_xlim(0,time[len(time)-1])
 	_all.grid()
@@ -68,8 +61,9 @@ def _plot(axes,x,y,name,_color):
 	axes.set_xlabel('Time')
 	axes.set_ylabel(name)
 	axes.set_xticks(x)
-	if (len(x)>10):
-		axes.set_xlim(len(x)-11,len(x)-1)
+	axes.tick_params(axis = 'x', rotation = -30)
+	if (len(x)>4):
+		axes.set_xlim(len(x)-5,len(x)-1)
 	else:
 		axes.set_xlim(0,x[len(x)-1])
 	axes.grid()
@@ -99,5 +93,6 @@ txt.get_xaxis().set_visible(False)
 txt.get_yaxis().set_visible(False)
 for i in txt.spines:
 	txt.spines[i].set_visible(False)
-plt.subplots_adjust(top=0.9, hspace = 0.4,left=0.05,right=0.95)
+plt.subplots_adjust(top=0.95,bottom = 0.18,wspace=0.25, hspace = 0.69,left=0.07,right=0.97)
+
 graph('data.csv')

@@ -1,6 +1,7 @@
 import csv
 import random
 import time
+from datetime import datetime
 import threading
 #import graph as gr
 
@@ -38,19 +39,22 @@ import threading
     
 #     time.sleep(1)
 
-ti = -1
+
 def getVal():
     return x,temp,bright,humid
 
 def genVal():
-    global x,temp,bright,humid,ti
+    global x,temp,bright,humid
     while True:
         temp.append(random.randint(0, 100))
         bright.append(random.randint(0, 100))
         humid.append(random.randint(0, 100))
-        ti+=1
+        ti = convertTime(time.time())
         x.append(ti)
         time.sleep(1)
+
+def convertTime(unixTime):
+    return datetime.fromtimestamp(unixTime).strftime("%H:%M:%S")
 
 temp = []
 bright = []
@@ -61,4 +65,3 @@ threading.Thread(target=genVal,daemon=True).start()
 #     a,b,c,d = getVal()
 #     print(a,b,c,d)
 #     time.sleep(1)
-
