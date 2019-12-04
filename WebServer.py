@@ -9,7 +9,6 @@ clients = {}
 HOST = ''
 PORT = 1234
 
-
 BUFSIZ = 1024
 ADDR = (HOST, PORT)
 
@@ -26,14 +25,13 @@ def accept_incoming_connections():
         client, client_address = SERVER.accept()
         # print("%s:%s has connected." % client_address)
         # Send greeting message
-        client.send("Welcome to the IOT server, please enter a name before transmission begins".encode("utf8"))
+        #client.send("Welcome to the IOT server, please enter a name before transmission begins".encode("utf8"))
         # Start client thread to handle the new connection
         Thread(target=handle_client, args=(client,)).start()
 
 
 # Handles a single client connection, taking client socket as argument
 def handle_client(client):
-
     print("Got a client!")
 
     # Get name from chat client
@@ -42,9 +40,9 @@ def handle_client(client):
     print(name)
 
     # Send welcome message to chat client
-    #welcome = 'You may begin transmission, if you ever want to quit, type {quit} to exit.'
-    #client.send(welcome.encode("utf8"))
-        
+    # welcome = 'You may begin transmission, if you ever want to quit, type {quit} to exit.'
+    # client.send(welcome.encode("utf8"))
+
     # Add new pair client socket, name to the clients pool
     clients[client] = name
 
@@ -52,7 +50,7 @@ def handle_client(client):
         # Receive message from client
         msg = client.recv(BUFSIZ).decode("utf8")
 
-        #print(msg)
+        # print(msg)
 
         # If it is not a {quit} message from client, then broadcast the
         # message to the rest of the connected chat clients
@@ -69,7 +67,7 @@ def handle_client(client):
                     continue
                 line_json = json.loads(line)
                 json_string = json.dumps(line_json)
-                #print("json:")
+                # print("json:")
                 print(json_string)
 
                 if name != "Graph":
@@ -89,7 +87,7 @@ def handle_client(client):
 # Broadcasts a message to all the clients, using prefix for name identification
 def broadcast(msg_string):
     for sock in clients:
-        sock.send(msg_string)
+        sock.send((msg_string + (";".encode("utf8"))))
 
 
 def main():
@@ -101,7 +99,6 @@ def main():
     ACCEPT_THREAD.start()
     # Wait for the accepting connections thread to stop
     ACCEPT_THREAD.join()
-
 
     # Close the server socket
     SERVER.close()
