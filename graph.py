@@ -6,14 +6,24 @@ import numpy as np
 import pandas as pd
 from matplotlib.animation import FuncAnimation
 
-def makePlot(i):
+import test
+
+def animate(i):
 	global time,t,b,m
-	data = pd.read_csv(fileName)
-	time = data['Time']
-	t = data['Temperature']
-	b = data['Brightness']
-	m = data['Humidity']
+	# data = pd.read_csv(fileName)
+	# time = data['Time']
+	# t = data['Temperature']
+	# b = data['Brightness']
+	# m = data['Humidity']
 	
+	# data = test.getVal()
+	# time.append(data[0])
+	# t.append(data[1])
+	# b.append(data[2])
+	# m.append(data[3])
+
+	time,t,b,m = test.getVal()
+
 	plotIndividual()
 	plotAll()
 	plotText()
@@ -67,7 +77,7 @@ def _plot(axes,x,y,name,_color):
 def graph(file):
 	global fileName
 	fileName = file
-	livePlot = FuncAnimation(fig,makePlot,interval = 1000*1)
+	livePlot = FuncAnimation(fig,animate,interval = 1000*1)
 	plt.show()
 	
 
