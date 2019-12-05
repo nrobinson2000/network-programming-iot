@@ -4,7 +4,7 @@ import pandas as pd
 from matplotlib.animation import FuncAnimation
 
 import test
-#import pyClient as pc
+import pyClient as pc
 
 def animate(i):
 	global time,t,b,m
@@ -14,8 +14,8 @@ def animate(i):
 	# b = data['Brightness']
 	# m = data['Humidity']
 	
-	time,t,b,m = test.getVal()
-	#time,t,b,m = pc.getData()
+	# time,t,b,m = test.getVal()
+	time,t,b,m = pc.getData()
 	plotIndividual()
 	plotAll()
 	plotText()
