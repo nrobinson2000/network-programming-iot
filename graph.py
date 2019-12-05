@@ -37,9 +37,12 @@ def plotText():
 
 #plot each plot individually
 def plotIndividual():
-	_plot(axes=temp,x=time,y=t,name = 'Temperature',_color='red')
-	_plot(axes=bright,x=time,y=b,name = 'Brightness',_color= 'orange')
-	_plot(axes=moist,x=time,y=m,name = 'Humidity',_color= 'green')
+	try:
+		_plot(axes=temp,x=time,y=t,name = 'Temperature',_color='red')
+		_plot(axes=bright,x=time,y=b,name = 'Brightness',_color= 'orange')
+		_plot(axes=moist,x=time,y=m,name = 'Humidity',_color= 'green')
+	except ValueError:
+		return
 
 #plot every plot together 
 def plotAll():
