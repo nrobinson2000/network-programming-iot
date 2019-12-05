@@ -1,6 +1,5 @@
 # IoT Sensor Network
 
-
 ## Description
 
 We want to create a solution for monitoring the environment of classrooms or dorms.
