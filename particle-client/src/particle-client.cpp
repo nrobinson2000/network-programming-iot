@@ -60,7 +60,7 @@ const uint32_t readingPeriod = 5;  // Read every 5 seconds
 const uint32_t publishPeriod = 30; // Publish every 30 seconds
 
 // Socket settings
-const char *serverAddress = "10.42.0.1";
+// const char *serverAddress = "10.42.0.1";
 uint16_t serverPort = 1234;
 
 // State Flags
@@ -72,7 +72,12 @@ inline void maintainSocket()
 {
   if (!client.connected())
   {
-    client.connect(serverAddress, serverPort);
+    client.connect(WiFi.gatewayIP(), serverPort);
+    if (!waitFor(client.connected, WIFI_TIMEOUT_SECONDS * SECONDS_MS))
+    {
+      Serial.println("Failed to connect to server.");
+    }
+
     client.println(deviceID);
     Serial.println("Connected to server.");
   }
@@ -110,7 +115,7 @@ inline void setDeviceID()
 {
   // Get string of device id
   const char *id = System.deviceID();
-  snprintf(deviceID, sizeof(deviceID), "%s", id);
+  snprintf(deviceID, sizeof(deviceID), "%s", id + 10);
 }
 
 // Initialize sensors and objects
@@ -144,6 +149,8 @@ void setup()
     Serial.println("Could not synchronize with the Particle cloud!");
   }
 #endif
+
+  Particle.disconnect();
 
   // Start timers
   readTimer.start();
@@ -238,9 +245,8 @@ void readSensors()
   if (!dhtRead())
   {
 #ifdef LOGGING
-    Serial.println("Error reading from DHT!");
+    Serial.println("DHT Error: Using old data.");
 #endif
-    return;
   }
 
   // Remove the oldest entry if the queue is full
@@ -256,6 +262,7 @@ void readSensors()
 // Attempt to send all data points in the queue to the server as JSON objects
 void publishData()
 {
+  Serial.print("Sending data... ");
   // Consume queue
   while (messageQueue.size() > 0)
   {
@@ -285,7 +292,7 @@ void publishData()
       Serial.println("Retrying...");
 #endif
 
-/*
+      /*
 
       // Retry up to 3 times
       while (failedPublishes++ < PUBLISH_RETRIES && error != ERR_OK)
@@ -298,20 +305,19 @@ void publishData()
 
 */
 
-
+      client.stop();
     }
 
     // Dequeue data point if the publish was successful, otherwise return from this function
     if (error == ERR_OK)
     {
       messageQueue.pop_front();
-
-
-      //client.stop();
     }
     else
     {
       return;
     }
   }
+
+  Serial.println("Sent.");
 }
