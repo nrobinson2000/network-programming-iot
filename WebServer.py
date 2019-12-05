@@ -9,7 +9,7 @@ clients = {}
 HOST = ''
 PORT = 1234
 
-BUFSIZ = 1024
+BUFSIZ = 2048
 ADDR = (HOST, PORT)
 
 # Create a TCP server socket
@@ -48,7 +48,12 @@ def handle_client(client):
 
     while True:
         # Receive message from client
-        msg = client.recv(BUFSIZ).decode("utf8")
+
+        try:
+            msg = client.recv(BUFSIZ).decode("utf8")
+        except ConnectionResetError:
+            del clients[client]
+            break
 
         # print(msg)
 
@@ -65,7 +70,11 @@ def handle_client(client):
                 # Skip empty lines
                 if len(line) == 0:
                     continue
-                line_json = json.loads(line)
+
+                try:
+                    line_json = json.loads(line)
+                except json.decoder.JSONDecodeError:
+                    continue
                 json_string = json.dumps(line_json)
                 # print("json:")
                 print(json_string)
@@ -86,9 +95,14 @@ def handle_client(client):
 
 # Broadcasts a message to all the clients, using prefix for name identification
 def broadcast(msg_string):
+    delete_clients = []
     for sock in clients:
-        sock.send((msg_string + (";".encode("utf8"))))
-
+        try:
+            sock.send((msg_string + (";".encode("utf8"))))
+        except BrokenPipeError:
+            delete_clients.append(sock)
+    for sock in delete_clients:
+        del clients[sock]
 
 def main():
     # Start listening to client connections
