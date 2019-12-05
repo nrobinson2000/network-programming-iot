@@ -43,22 +43,25 @@ def plotIndividual():
 
 #plot every plot together 
 def plotAll():
-	_all.cla()
-	_all.plot(time,t,label = 'Temperature', color = 'red')
-	b1=[]
-	for i in b:
-		b1.append(i/100)
-	_all.plot(time,b1,label = 'Brightness \n  1:100', color = 'orange')
-	_all.plot(time,m,label = 'Humidity', color = 'green')
-	_all.set_title('Everything')
-	_all.legend(loc = (1.01,0.715), prop = {'size': 7})
-	_all.set_xticks(np.arange(len(time)))
-	_all.tick_params(axis = 'x', rotation = -30)
-	if (len(time)>7):
-		_all.set_xlim(len(time)-8,len(time)-1)
-	else:
-		_all.set_xlim(0,time[len(time)-1])
-	_all.grid()
+	try:
+		_all.cla()
+		_all.plot(time,t,label = 'Temperature', color = 'red')
+		b1=[]
+		for i in b:
+			b1.append(i/100)
+		_all.plot(time,b1,label = 'Brightness \n  1:100', color = 'orange')
+		_all.plot(time,m,label = 'Humidity', color = 'green')
+		_all.set_title('Everything')
+		_all.legend(loc = (1.01,0.715), prop = {'size': 7})
+		_all.set_xticks(np.arange(len(time)))
+		_all.tick_params(axis = 'x', rotation = -30)
+		if (len(time)>7):
+			_all.set_xlim(len(time)-8,len(time)-1)
+		else:
+			_all.set_xlim(0,time[len(time)-1])
+		_all.grid()
+	except ValueError:
+		return
 
 #plot driver
 def _plot(axes,x,y,name,_color):
