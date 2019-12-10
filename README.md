@@ -136,6 +136,7 @@ How to record your screen: https://www.techradar.com/how-to/record-your-screen
 Provide links to all coding resources you used in your project. Note: if copy and paste is detected without citing the source, then 50% deduction on the final report!
 
 stackoverflow.com
+
 matplotlib.org
 
 ## Team members
