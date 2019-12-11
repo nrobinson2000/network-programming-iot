@@ -14,17 +14,19 @@ In the demo, we chose run the Python server and graphing applications on the sam
 
 ![](images/sensor-node.jpg)
 
-
-
 ## Getting Started
 
 ### Installing the Application
 
-Below are the necessary steps to install the required dependencies for running our project. To fully recreate this project you will need at least one Argon + Grove kit and a method to create a hotspot on your PC with ethernet and Wi-Fi.
+Below are the necessary steps to install the required dependencies for running our project. To fully recreate this project you will need at least one Argon + Grove kit and will need to create a Wi-Fi hotspot on your PC using ethernet.
 
 **Step 0: Clone this Repository with Git or Download a .zip**
 
 You will need to have a local copy of this repository in order to compile or run any of the components.
+
+```bash
+git clone https://github.com/nrobinson2000/network-programming-iot
+```
 
 **Step 1: Download and Install Particle Workbench**
 
@@ -68,12 +70,13 @@ It may take a few minutes to compile DeviceOS, so be patient. You may see a sequ
 
 When the application is running the boot sequence of the RGB should look like:
 
-* Green Blinks (Looking for Wi-Fi)
-* Fast Green Blinks (Connecting to Wi-Fi)
-* Slow Green Pulse (Connected to Wi-Fi)
+* White Pulse (Processor is Booting)
+* Green Blinks (Connecting to Wi-Fi)
 * Fast Cyan Blinks (Connecting to Particle Cloud)
 * Slow Cyan Pulse (Connected to Particle Cloud, Syncing Time)
 * Slow Green Pulse (Disconnected from Particle Cloud, Connected to Wi-Fi)
+
+After the Argon has booted and connected to the server, it will automatically maintain it's Wi-Fi connection and socket connection with the server, reconnecting when necessary.
 
 ---
 
@@ -111,37 +114,62 @@ You will see a notification in the server when the Graph client connects. Once n
 
 ![](images/graph.png)
 
-## Features (10 pts)
-List all the features of your application
-1. Feature #1
-2. Feature #2
-3. Feature #3 
-...
+## Features
 
-## Demo video (50 pts)
+There are many different features in our project that are distributed across the three parts:
+
+### Sensor Node Features
+
+* Connects to the Particle Cloud to synchronize timestamps for data points.
+* Connects to the Python server with a TCP socket to send JSON data.
+* Uses a 5 second timer to collect and store sensor data in a queue.
+* Uses a 30 second timer to transmit all sensor data points in JSON format to the server.
+* Automatically reconnects to the server and Wi-Fi if connections are interrupted.
+
+### Python Server Features
+
+* Receives JSON payloads from sensor nodes.
+* Sends JSON payloads to the graphing client.
+* Uses dedicated threads for handling each client.
+
+### Graphing Client Features
+
+* Connects to the Python server with a TCP socket.
+* Receives JSON payloads from the server.
+* Parses JSON payloads into data points and graphs the data using matplotlib.
+* Graphs Temperature, Brightness, and Humidity, and displays the calculated mean and standard deviation.
+
+## Demo video
 
 Upload your demo video to youtube and put a link here. Basically, the video content is very much like the quick live demo of your product with the followings:
+
 1. Project description
 2. How to run the app
 3. Quick walkthrough of all the features of your app
 
-Make it short and interesting.
+LINK TO VIDEO HERE
 
-Sample: https://www.youtube.com/watch?v=Pr-JMqTkdEM
+## References
 
-How to record your screen: https://www.techradar.com/how-to/record-your-screen
+### General Troubleshooting
+* [Stack Overflow](https://stackoverflow.com/) - Used to fix bugs with python development
 
-## References (10 pts)
+### Python Libraries
+* [matplotlib](https://matplotlib.org/) - Used to plot data in the graphing client
 
-Provide links to all coding resources you used in your project. Note: if copy and paste is detected without citing the source, then 50% deduction on the final report!
+### Particle Libraries
+* [PietteTech_DHT](https://github.com/eliteio/PietteTech_DHT) - Used to read temperature and humidity
+* [TCPClient](https://docs.particle.io/reference/device-os/firmware/argon/#tcpclient) - Used to manage socket connection to python server
 
-stackoverflow.com
-
-matplotlib.org
+### Hardware
+* [Particle IoT Starter Kit](https://store.particle.io/products/iot-starter-kit) - Includes Argon development board anbd 
+* [USB C to Ethernet Adapter](https://www.amazon.com/gp/product/B077KXY71Q/)
+* [Ethernet Cable](https://www.amazon.com/gp/product/B00N2VIALK/)
+* [Jumper Wires](https://www.amazon.com/gp/product/B07GD1XFWV)
+* [Photoresistors](https://www.amazon.com/gp/product/B07PF3CWW9)
 
 ## Team members
 
 * Nathan Robinson, Particle Developer
-* Phat Duong, Python Developer
-* William Serpa, Lead Tester
-
+* Phat Duong, Python Graph Developer
+* William Serpa, Python Server Developer
